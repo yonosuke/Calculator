@@ -1,184 +1,210 @@
 package sample.application.calculator;
 
-import android.app.Activity;
-import android.os.Bundle;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
-import android.text	.ClipboardManager;
+import java.util.HashMap;
+import java.util.Map;
+
+import android.os.Bundle;
+import android.app.Activity;
+import android.util.Log;
+import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
-import android.os.Vibrator;
-import android.content.SharedPreferences;
+
+import android.widget.TextView;
 
 public class CalculatorActivity extends Activity {
-
-	String strTemp="";
-	String strResult="0";
-	int operator=0;
-
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_calculator);
-		readPreferences();
-	}
-
-
-	public void numKeyOnClick(View v){
-		TextView sp=(TextView)findViewById(R.id.subPanel);
-		String strSp=sp.getText().toString();
-		if(strSp.indexOf("=")==strSp.length()-1)sp.setText("");
+	
+    public String num1 = new String();
+    public String strTemp = "";
+	public Integer operator = 0;
+	public String strResult;
+	private static Map<Integer, FunctionLogic> funcMap;
+	
+	static{ //HashMapをつくる　キーをかえるとヴァリューがかわる
+		CalculatorActivity.funcMap = new HashMap<Integer, FunctionLogic>();
+		CalculatorActivity.funcMap.put(R.id.keypadAC, new Ac());
+		CalculatorActivity.funcMap.put(R.id.keypadC, new C());
+		CalculatorActivity.funcMap.put(R.id.keypadBS, new Bs());
+		CalculatorActivity.funcMap.put(R.id.keypadCopy, new Copy());
 		
-		((Vibrator)getSystemService(VIBRATOR_SERVICE)).vibrate(50);
-		String strInKey=(String) ((Button)v).getText();
-		if(strInKey.equals(".")){
-			if(strTemp.length()==0){
-				strTemp="0.";
-			}else{
-				if(strTemp.indexOf(".")==-1){
-					strTemp=strTemp+".";
-				}
-			}
-		}else{
-			strTemp=strTemp+strInKey;
-		}
-		showNumber(strTemp);
 	}
+	
 
-	private void showNumber(String strNum){
-		DecimalFormat form=new DecimalFormat("#,##0");
-		String strDecimal="";
-		String strInt="";
-		String fText="";
-		if(strNum.length()>0){
-			int decimalPoint=strNum.indexOf(".");
-			if(decimalPoint>-1){
-				strDecimal=strNum.substring(decimalPoint);
-				strInt=strNum.substring(0,decimalPoint);
-			}else{
-				strInt=strNum;
-			}
-			fText=form.format(Double.parseDouble(strInt))+strDecimal;
-		}else fText="0";
-		((TextView)findViewById(R.id.displayPanel)).setText(fText);
+	//public static String final  hoge = "";
+/*	
+	public static String hog = this.strTemp;
+	
+	public static void onCre(){
+		hog = this.strTemp;
 	}
-
-	public void functionKeyOnClick(View v){
-		((Vibrator)getSystemService(VIBRATOR_SERVICE)).vibrate(50);
-		switch(v.getId()){
-		case R.id.keypadAC:
-			strTemp="";
-			strResult="0";
-			operator=0;
-			((TextView)findViewById(R.id.subPanel)).setText("");
-			break;
-		case R.id.keypadC:
-			strTemp="";
-			break;
-		case R.id.keypadBS:
-			if(strTemp.length()==0)return;
-			else strTemp=strTemp.substring(0,strTemp.length()-1);
-			break;
-		case R.id.keypadCopy:
-			ClipboardManager cm=(ClipboardManager) getSystemService(
-					CLIPBOARD_SERVICE);
-			cm.setText(((TextView)findViewById(R.id.displayPanel)).getText());
-			return;
-		}
-		showNumber(strTemp);
+	
+	static{
+		CalculatorActivity.hog  = "hoge";
+		CalculatorActivity.onCre();
+		CalculatorActivity.hog = this.strTemp;
+	    System.out.println(CalculatorActivity.class);
 	}
+*/
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_calculator);
+    }
 
-	public void operatorKeyOnClick(View v){
-		((Vibrator)getSystemService(VIBRATOR_SERVICE)).vibrate(50);
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.activity_calculator, menu);
+        return true;
+    }
+  /*  
+    public void numKeyOnClick(View v){
+    	//v.getText();
+    	Button button = (Button)v;
+    	Log.d("[buttonのtext]", button.getText().toString());
+    	TextView tv = (TextView) this.findViewById(R.id.displayPanel);
+    	Log.d("[tvのインスタンスか確認]", "tv.text: " + tv.getText().toString());
+    	tv.setText(tv.getText().toString() + button.getText().toString());
+    }*/
+    
+    public void numKeyOnClick(View v){
+    	String strInKey = (String) ((Button)v).getText();
+    	
+    	if(strInKey.equals(".")){
+    		if(this.strTemp.length() == 0){
+    			this.strTemp = "0.";
+    		}else{
+    			if(this.strTemp.indexOf(".") == -1){
+    				this.strTemp = this.strTemp + ".";
+    			}
+    		}
+    	}else{
+    		this.strTemp = this.strTemp + strInKey;
+    	}
+    	//TODO インスタンス変数わたしとるわ
+    	this.showNumber(this.strTemp);
+    	
+    }
+    
+    public void showNumber(String strNum){ //ほかのファイルで見えないのでprivateをpublicにした
+    	
+    	DecimalFormat form = new DecimalFormat("#,##0");
+    	String strDecimal = "";
+    	String strInt = "";
+    	String fText = "";
+    	
+    	if(strNum.length() > 0){
+    		int decimalPoint = strNum.indexOf(".");
+    		if(decimalPoint > -1){
+    			strDecimal = strNum.substring(decimalPoint);
+    			strInt = strNum.substring(0, decimalPoint);
+    				
+    		}else{
+    			strInt = strNum;
+    		}
+    		fText = form.format(Double.parseDouble(strInt)) + strDecimal;
+    		
+    	}else fText = "0";
 
-		  TextView sp=(TextView) findViewById(R.id.subPanel);
-		  String op2=((Button)findViewById(v.getId())).getText().toString();
-		  
-		  if(operator!=0){
-			   String op1=((Button)findViewById(operator)).getText().toString();
-			if(strTemp.length()>0){
-				sp.setText(strResult+op1+strTemp+op2);
-				strResult=doCalc();
-				showNumber(strResult);
-			}
-			else{
-			      sp.setText(strResult+op2);
-			    }
-		}
-		else{
-			if(strTemp.length()>0){
-				strResult=strTemp;
-			}
-			sp.setText(strResult+op2);
-		}
-		strTemp="";
-		if(v.getId()==R.id.keypadEq){
-			operator=0;
-		}else{
-			operator=v.getId();
-		}
-	}
+    	((TextView)this.findViewById(R.id.displayPanel)).setText(fText);
+    }
+    
+    public void operatorKeyOnClick(View v){
+    	if(this.operator != 0){
+    		if(this.strTemp.length() > 0){
+    			this.strResult = this.doCalc();
+    			this.showNumber(this.strResult);
+    		}
+    	}else{
+    		if(this.strTemp.length() > 0){
+    			this.strResult = this.strTemp;
+    		}
+    	}
+    	
+    	this.strTemp = "";
+    	
+    	if(v.getId() == R.id.keypadEq){
+    		this.operator = 0;
+    	}else{
+    		this.operator = v.getId();
+    	}
+    }
 
-	private String doCalc(){
-		BigDecimal bd1=new BigDecimal(strResult);
-		BigDecimal bd2=new BigDecimal(strTemp);
-		BigDecimal result=BigDecimal.ZERO;
-		switch(operator){
+	private String doCalc() {
+		// TODO 自動生成されたメソッド・スタブ
+		BigDecimal bd1 = new BigDecimal(this.strResult);
+		BigDecimal bd2 = new BigDecimal(this.strTemp);
+		BigDecimal result = BigDecimal.ZERO;
+		
+		switch(this.operator){
 		case R.id.keypadAdd:
-			result=bd1.add(bd2);
+			result = bd1.add(bd2);
 			break;
 		case R.id.keypadSub:
-			result=bd1.subtract(bd2);
+			result = bd1.subtract(bd2);
 			break;
 		case R.id.keypadMulti:
-			result=bd1.multiply(bd2);
+			result = bd1.multiply(bd2);
 			break;
 		case R.id.keypadDiv:
 			if(!bd2.equals(BigDecimal.ZERO)){
-				result=bd1.divide(bd2, 12, 3);
+				result = bd1.divide(bd2, 12, 3);
 			}else{
-				Toast toast=Toast.makeText(this,R.string.toast_div_by_zero,1000);
+				Toast toast = Toast.makeText(this, R.string.toast_div_by_zero, 1000);
 				toast.show();
 			}
 			break;
 		}
-		if(result.toString().indexOf(".")>=0){
-			return result.toString().replaceAll("\\.0+$|0+$","");
+		
+		if(result.toString().indexOf(".") >= 0){
+			return result.toString().replaceAll("¥¥.0+$|0+$", "");
 		}else{
 			return result.toString();
 		}
+		
 	}
-
-	void writePreferences(){
-		SharedPreferences prefs=getSharedPreferences("CalcPrefs", MODE_PRIVATE);
-		SharedPreferences.Editor editor=prefs.edit();
-		editor.putString("strTemp",strTemp);
-		editor.putString("strResult",strResult);
-		editor.putInt("operator",operator);
-		editor.putString("strDisplay",
-				((TextView)findViewById(R.id.displayPanel)).getText().toString());
-		editor.putString("strSubDisplay",((TextView)findViewById(R.id.subPanel)).getText().toString());
-		editor.commit();
+	
+	public void d(){
+		this.getSharedPreferences("hogr", 1000000000);
 	}
-
-	void readPreferences(){
-		SharedPreferences prefs=getSharedPreferences("CalcPrefs", MODE_PRIVATE);
-		strTemp=prefs.getString("strTemp", "");
-		strResult=prefs.getString("strResult", "0");
-		operator=prefs.getInt("operator", 0);
-		((TextView)findViewById(R.id.displayPanel)).setText(
-				prefs.getString("strDisplay","0"));
-		((TextView)findViewById(R.id.subPanel)).setText(prefs.getString("strSubDisplay","0"));
+	
+	public void functionKeyOnClick(View v){
+/*		
+		switch(v.getId()){
+		case R.id.keypadAC:
+		case R.id.keypadC:
+		case R.id.keypadBS:
+		case R.id.keypadCopy:
 		}
-
-
-	@Override
-	protected void onStop() {
-		super.onStop();
-		writePreferences();
+	*/	
+		FunctionLogic logic = funcMap.get(v.getId()); 
+		logic.doFunction(this);
+		
 	}
+
+/*    
+    public void addKeyOnClick(View v){
+    	Log.d("[addkeyがよばれたか確認]", "てすと");
+    	//String num1 = null; //表示されている数字の保存領域
+    	TextView tv = (TextView) this.findViewById(R.id.displayPanel);
+    	Log.d("[tvのインスタンスか確認]", "tv.text: " + tv.getText().toString());
+    	Log.d("addkeyがよばれてすぐ",this.num1);
+    	this.num1 = tv.getText().toString();
+    	Log.d("num1にアドレスをいれたあと",this.num1);
+    	//num1 = tv.getText().toString();
+    	tv.setText("0");
+    	
+    }
+    
+    public void equalKeyOnClick(View v){
+    	Log.d("[equalkeyがよばれたか確認]", "てすと");
+    	Log.d("equalKey でのnum1",this.num1);
+    	//新しく表示された数字を取得
+    	//num1に保存した最初の数字を取得
+    	//上二つを足す。
+    }
+*/   
 
 }
-
